@@ -19,42 +19,69 @@ type Field struct {
 	status [][]bool
 }
 
-func newField(height int, width int, initRate float64) *Field {
+func createFieldFrame(height int, width int) *Field {
 	field := new(Field)
 	field.height = height
 	field.width = width
-	fieldTable := make([][]bool, height)
-	rand.Seed(time.Now().UnixNano())
+	field.status = make([][]bool, height)
 	for h := 0; h < height; h++ {
-		fieldTable[h] = make([]bool, width)
-		for w := 0; w < width; w++ {
+		field.status[h] = make([]bool, width)
+	}
+	return field
+}
+
+func (field *Field) initFieldStatus(initRate float64) *Field {
+	rand.Seed(time.Now().UnixNano())
+	for h := 0; h < field.height; h++ {
+		for w := 0; w < field.width; w++ {
 			if rand.Float64() < initRate {
-				fieldTable[h][w] = true
+				field.status[h][w] = true
 			} else {
-				fieldTable[h][w] = false
+				field.status[h][w] = false
 			}
 		}
 	}
-	field.status = fieldTable
 	return field
+}
+
+func (field *Field) printField() {
+	for h := 0; h < field.height; h++ {
+		for w := 0; w < field.width; w++ {
+			if field.status[h][w] == true {
+				fmt.Print("■")
+			} else {
+				fmt.Print("□")
+			}
+		}
+		fmt.Println("")
+	}
 }
 
 //LifeGame ライフゲーム
 type LifeGame struct {
-	gameField *Field
-	history   []Field
-	interval  float64
+	currentField   *Field
+	history        []Field
+	intervalSecond int
 }
 
-func newLifeGame(height int, width int, initRate float64, interval float64) *LifeGame {
+func newLifeGame(height int, width int, initRate float64, interval int) *LifeGame {
 	lifeGame := new(LifeGame)
-	gamefield := newField(height, width, initRate)
-	lifeGame.gameField = gamefield
-	lifeGame.interval = interval
+	gamefield := createFieldFrame(height, width).initFieldStatus(initRate)
+
+	lifeGame.currentField = gamefield
+	lifeGame.intervalSecond = interval
 	return lifeGame
 }
 
-func parseCommandLine() (int, int, float64, float64) {
+// func nextFrame(game *LifeGame) {
+// 	nextFrame := createFieldFrame(game.currentField.height, game.currentField.width)
+// }
+func mainLoop(game *LifeGame) {
+
+	time.Sleep(time.Duration(game.intervalSecond) * time.Second)
+}
+
+func parseCommandLine() (int, int, float64, int) {
 	args := os.Args
 	for _, arg := range args {
 		if arg == "-h" || arg == "--help" || len(args) == 1 {
@@ -72,12 +99,12 @@ optional arguments:
 	height, _ := strconv.Atoi(args[1])
 	width, _ := strconv.Atoi(args[2])
 	initRate, _ := strconv.ParseFloat(args[3], 64)
-	interval, _ := strconv.ParseFloat(args[4], 64)
+	interval, _ := strconv.Atoi(args[4])
 	return height, width, initRate, interval
 }
 
 func main() {
 	height, width, initRate, interval := parseCommandLine()
 	lifegame := newLifeGame(height, width, initRate, interval)
-	fmt.Println(lifegame.gameField.status)
+	lifegame.currentField.printField()
 }
